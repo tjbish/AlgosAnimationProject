@@ -1,4 +1,4 @@
-# AlgosAnimationProjet
+# AlgosAnimationProject
 
 Repository for the University of Alabama CS 470 Algorithm Animations Project, Spring 2026.
 
@@ -8,9 +8,9 @@ This project is a browser-based visualization tool for algorithm animations. The
 
 The current implementation is intentionally modular:
 
-- `Animator` controls playback timing and frame advancement
-- `Renderer` manages the canvas and delegates drawing to the selected algorithm
-- each algorithm module provides its own initial state, animation frames, and drawing logic
+- The `Animator` controls playback timing and frame advancement;
+- The `Renderer` manages the canvas and delegates drawing to the selected algorithm;
+- Each algorithm module provides its own initial state, animation frames, and drawing logic
 
 This structure is intended to make it easier to replace or expand algorithm implementations over time without rewriting the rest of the application.
 
@@ -56,7 +56,7 @@ When the page loads, `main.js` reads the currently selected algorithm and loads 
 
 The workflow is:
 
-1. user selects an algorithm
+1. The user selects an algorithm
 2. `main.js` loads that algorithm and passes it to the renderer
 3. `Animator` advances through the generator one frame at a time
 4. `Renderer` clears the canvas and asks the algorithm to draw the current frame
