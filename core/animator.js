@@ -1,45 +1,67 @@
 export class Animator {
-    constructor(updateCallback) {
+    constructor(onFrame) {
         this.interval = null;
+        this.generatorFactory = null;
         this.generator = null;
-        this.speed = 1000;
-        this.updateCallback = updateCallback;
+        this.speed = 1500;
+        this.onFrame = onFrame;
     }
 
+    setGeneratorFactory(generatorFactory) {
+        this.pause();
+        this.generatorFactory = generatorFactory;
+        this.generator = null;
+    }
 
-    setGenerator(gen) {
-        this.generator = gen;
+    restart() {
+        if (!this.generatorFactory) {
+            this.generator = null;
+            return;
+        }
+
+        this.generator = this.generatorFactory();
     }
 
     play() {
-        if (!this.generator) return;
+        if (!this.generatorFactory) {
+            return;
+        }
 
+        if (!this.generator) {
+            this.restart();
+        }
+
+        this.pause();
         this.interval = setInterval(() => {
-            const result = this.generator.next();
-            if (!result.done) {
-                this.updateCallback(result.value);
-            } else {
-                this.pause();
-            }
+            this.step();
         }, this.speed);
     }
 
     pause() {
         clearInterval(this.interval);
+        this.interval = null;
     }
 
     step() {
-        if (!this.generator) return;
-        const result = this.generator.next();
-        if (!result.done) {
-            this.updateCallback(result.value);
+        if (!this.generatorFactory) {
+            return;
         }
+
+        if (!this.generator) {
+            this.restart();
+        }
+
+        const result = this.generator.next();
+        if (result.done) {
+            this.pause();
+            return;
+        }
+
+        this.onFrame(result.value);
     }
 
     reset() {
         this.pause();
-        this.generator = null;
+        this.restart();
     }
-
-
 }

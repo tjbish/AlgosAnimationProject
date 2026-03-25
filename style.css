@@ -1,6 +1,7 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
+    background-color: #b3b2b2;
 }
 
 #controls {
@@ -9,4 +10,5 @@ body {
 
 canvas {
     border: 1px solid black;
+    background-color: #ffffff;
 }

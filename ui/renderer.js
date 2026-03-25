@@ -1,15 +1,31 @@
 export class Renderer {
     constructor(canvas) {
+        this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
+        this.currentAlgorithm = null;
+    }
+
+    setAlgorithm(algorithm) {
+        this.currentAlgorithm = algorithm;
+    }
+
+    clear() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     draw(state) {
-        const ctx = this.ctx;
+        this.clear();
 
-        ctx.clearRect(0, 0, 800, 500);
+        if (!this.currentAlgorithm || typeof this.currentAlgorithm.draw !== "function") {
+            return;
+        }
 
-        // TEMP: draw step info
-        ctx.font = "20px Arial";
-        ctx.fillText(JSON.stringify(state), 50, 250);
+        this.currentAlgorithm.draw({
+            ctx: this.ctx,
+            canvas: this.canvas,
+            state,
+        });
     }
 }
