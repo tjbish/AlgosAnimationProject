@@ -111,5 +111,6 @@ Current names listed in the page:
 - Peter Capriotti
 - Ryan Montgomery
 - Brayden #####
+- Aiden Slabiak
 
 Update the contributor list in both `README.md` and `index.html` as the project roster is finalized.
