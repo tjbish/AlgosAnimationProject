@@ -20,105 +20,189 @@ function drawPerson(ctx, label, x, y, color) {
     ctx.fillText(label, x, y);
 }
 
+
+// These names map numeric indices (used internally) to display labels.
+const LEFT_NAMES  = ["A", "B", "C"];  // proposers
+const RIGHT_NAMES = ["X", "Y", "Z"];  // receivers
+
+// Preference lists: each row is one person's ranking of the other side,
+
+const PROPOSER_PREFS  = [[1, 0, 2], [0, 1, 2], [0, 1, 2]];
+const RECEIVER_PREFS  = [[1, 0, 2], [0, 1, 2], [0, 1, 2]];
+
+
+// Returns true if `newIn` appears before `current` in the receiver's
+// preference list, meaning the receiver would prefer newIn over current.
+function isBetter(current, newIn, prefList) {
+    for (const candidate of prefList) {
+        if (candidate === current) return false;  // hit current first → not better
+        if (candidate === newIn)   return true;   // hit newIn first  → better
+    }
+    // Should never reach here with valid input
+    console.error("isBetter: neither candidate found in preference list");
+    return false;
+}
+
+
+// pairings[receiverIndex] = proposerIndex  (-1 means unmatched)
+// nextProposal[proposerIndex] = index into that proposer's preference list
+//   pointing at the next receiver they haven't yet proposed to.
+
 export const galeShapleyAlgorithm = {
     name: "Gale-Shapley",
 
     getInitialState() {
-        // Initial state before any proposals are made.
-        // proposer/receiver track the active proposal and matches stores accepted pairs.
         return {
-            title: "Stable matching setup",
+            title: "Stable matching — ready to begin",
             proposer: null,
             receiver: null,
-            matches: [],
+            matches: [],   // confirmed (tentative) pairs as [leftName, rightName]
         };
     },
 
     *createGenerator() {
-        // Step 1 result: A proposes to X, so only the temporary proposal is shown.
-        yield {
-            title: "A proposes to X",
-            proposer: "A",
-            receiver: "X",
-            matches: [],
-        };
+        const n = LEFT_NAMES.length;
 
-        // Step 2 result: X accepts A, so the pair becomes a stable tentative match.
-        yield {
-            title: "X tentatively accepts A",
-            proposer: "A",
-            receiver: "X",
-            matches: [["A", "X"]],
-        };
+        // Deep-copy preference lists so the algorithm can consume them freely.
+        const lPrefs = PROPOSER_PREFS.map(row => [...row]);
+        const rPrefs = RECEIVER_PREFS.map(row => [...row]);
 
-        // Step 3 result: B proposes while the existing A-X match remains in place.
-        yield {
-            title: "B proposes to Y",
-            proposer: "B",
-            receiver: "Y",
-            matches: [["A", "X"]],
-        };
+        // pairings[r] = l means receiver r is tentatively matched to proposer l.
+        const pairings = new Array(n).fill(-1);
 
-        // Step 4 result: both tentative matches are now shown as accepted pairings.
+        // nextProposal[l] = how many proposals l has already made (i.e. the
+        // index into lPrefs[l] for the next receiver to approach).
+        const nextProposal = new Array(n).fill(0);
+
+        // All proposers start unmatched and will eventually propose.
+        const pendingProposers = Array.from({ length: n }, (_, i) => i);
+
+        // Helper: build the matches array from the current pairings for display.
+        const buildMatches = () =>
+            pairings
+                .map((l, r) => (l !== -1 ? [LEFT_NAMES[l], RIGHT_NAMES[r]] : null))
+                .filter(Boolean);
+
+        while (pendingProposers.length > 0) {
+            // Take the next proposer who still needs a match.
+            const l = pendingProposers.shift();
+            const lName = LEFT_NAMES[l];
+
+            // Pick the highest-ranked receiver this proposer hasn't tried yet.
+            const r = lPrefs[l][nextProposal[l]];
+            nextProposal[l]++;
+            const rName = RIGHT_NAMES[r];
+
+            // Yield: show the proposal before we know if it will be accepted.
+            yield {
+                title: `${lName} proposes to ${rName}`,
+                proposer: lName,
+                receiver: rName,
+                matches: buildMatches(),
+            };
+
+            if (pairings[r] === -1) {
+                // Receiver is free — accept immediately.
+                pairings[r] = l;
+                yield {
+                    title: `${rName} tentatively accepts ${lName}`,
+                    proposer: lName,
+                    receiver: rName,
+                    matches: buildMatches(),
+                };
+            } else {
+                const currentPartner = pairings[r];
+                const currentName = LEFT_NAMES[currentPartner];
+
+                if (isBetter(currentPartner, l, rPrefs[r])) {
+                    // Receiver prefers the new proposer → swap.
+                    pairings[r] = l;
+                    yield {
+                        title: `${rName} prefers ${lName} and dumps ${currentName}`,
+                        proposer: lName,
+                        receiver: rName,
+                        matches: buildMatches(),
+                    };
+                    // The dumped proposer goes back into the queue.
+                    pendingProposers.push(currentPartner);
+                } else {
+                    // Receiver prefers their current partner → reject.
+                    yield {
+                        title: `${rName} rejects ${lName} (keeps ${currentName})`,
+                        proposer: lName,
+                        receiver: rName,
+                        matches: buildMatches(),
+                    };
+                    // The rejected proposer goes back into the queue to try again.
+                    pendingProposers.push(l);
+                }
+            }
+        }
+
+        // Final frame: algorithm complete.
         yield {
-            title: "Y tentatively accepts B",
-            proposer: "B",
-            receiver: "Y",
-            matches: [["A", "X"], ["B", "Y"]],
+            title: "Stable matching complete!",
+            proposer: null,
+            receiver: null,
+            matches: buildMatches(),
         };
     },
 
-    draw({ ctx, state }) {
-        // left and right store the positions of the two groups being matched.
-        const left = [
-            { label: "A", x: 180, y: 170 },
-            { label: "B", x: 180, y: 290 },
-        ];
-        const right = [
-            { label: "X", x: 620, y: 170 },
-            { label: "Y", x: 620, y: 290 },
-        ];
+    draw({ ctx, canvas, state }) {
+        const n = LEFT_NAMES.length;
+
+        // Spread nodes evenly down each side of the canvas.
+        const leftX  = 180;
+        const rightX = canvas.width - 180;
+        const topY   = 120;
+        const gap    = (canvas.height - topY * 2) / (n - 1);
+
+        const left  = LEFT_NAMES.map( (label, i) => ({ label, x: leftX,  y: topY + i * gap }));
+        const right = RIGHT_NAMES.map((label, i) => ({ label, x: rightX, y: topY + i * gap }));
 
         ctx.textAlign = "left";
         ctx.textBaseline = "alphabetic";
         drawLabel(ctx, state.title, 40, 50);
 
-        // Draw confirmed matches first so they appear as solid green pairings.
-        for (const [from, to] of state.matches) {
-            const fromNode = left.find((node) => node.label === from);
-            const toNode = right.find((node) => node.label === to);
+        // Draw column headers so the viewer knows which side is which.
+        ctx.fillStyle = "#555555";
+        ctx.font = "14px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Proposers", leftX,  topY - 50);
+        ctx.fillText("Receivers", rightX, topY - 50);
 
-            if (!fromNode || !toNode) {
-                continue;
-            }
+        // Draw confirmed matches as solid green lines.
+        for (const [fromLabel, toLabel] of state.matches) {
+            const fromNode = left.find(n => n.label === fromLabel);
+            const toNode   = right.find(n => n.label === toLabel);
+            if (!fromNode || !toNode) continue;
 
             ctx.strokeStyle = "#2d6a4f";
             ctx.lineWidth = 4;
             ctx.beginPath();
             ctx.moveTo(fromNode.x + 24, fromNode.y);
-            ctx.lineTo(toNode.x - 24, toNode.y);
+            ctx.lineTo(toNode.x  - 24, toNode.y);
             ctx.stroke();
         }
 
-        // Draw the active proposal as a dashed red line to distinguish it from accepted matches.
+        // Draw the active proposal as a dashed red line.
         if (state.proposer && state.receiver) {
-            const fromNode = left.find((node) => node.label === state.proposer);
-            const toNode = right.find((node) => node.label === state.receiver);
-
+            const fromNode = left.find(n => n.label === state.proposer);
+            const toNode   = right.find(n => n.label === state.receiver);
             if (fromNode && toNode) {
                 ctx.strokeStyle = "#c1121f";
                 ctx.lineWidth = 2;
                 ctx.setLineDash([10, 8]);
                 ctx.beginPath();
                 ctx.moveTo(fromNode.x + 24, fromNode.y);
-                ctx.lineTo(toNode.x - 24, toNode.y);
+                ctx.lineTo(toNode.x  - 24, toNode.y);
                 ctx.stroke();
                 ctx.setLineDash([]);
             }
         }
 
-        // Draw the participants last so they stay visible on top of the connecting lines.
-        left.forEach((node) => drawPerson(ctx, node.label, node.x, node.y, "#bde0fe"));
-        right.forEach((node) => drawPerson(ctx, node.label, node.x, node.y, "#ffd6a5"));
+        // Draw the participant circles on top of all lines.
+        left.forEach( node => drawPerson(ctx, node.label, node.x, node.y, "#bde0fe"));
+        right.forEach(node => drawPerson(ctx, node.label, node.x, node.y, "#ffd6a5"));
     },
 };
