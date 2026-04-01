@@ -53,13 +53,60 @@ export const hungarianAlgorithm = {
             highlight: [[0, 1], [1, 1], [2, 1], [2, 2]],
         };
 
-        // Step 3 result: a candidate set of independent zeros is chosen for assignment.
+        // Step 3 result: column reduction introduces zeros that are highlighted in green.
         yield {
-            title: "Choose independent zeros",
+            title: "Column Reduction",
             matrix: [
-                [3, 0, 2],
+                [2, 0, 2],
+                [1, 0, 5],
+                [0, 0, 0],
+            ],
+            highlight: [[0, 1], [1, 1], [2, 0], [2, 1], [2, 2]],
+        };
+
+        // Step 4: Find the smallest entry not covered by any line. 
+        // Subtract it from all uncovered entries and add it to all entries covered by two lines. This creates new zeros that are highlighted in green.
+        yield {
+            title: "Adjust matrix to create additional zeros, based on minimum uncovered value",
+            matrix: [
+                [1, 0, 1],
+                [0, 0, 4],
+                [0, 1, 0],
+            ],
+            highlight: [[0, 1], [1, 0], [1, 1], [2, 0], [2, 2]],
+            
+        };
+
+        yield {
+            title: "Display lines covering all zeros",
+            matrix: [
+                [1, 0, 1],
+                [0, 0, 4],
+                [0, 1, 0],
+            ],
+            highlight: [[0, 1], [1, 0], [1, 1], [2, 0], [2, 2]],
+            lines: [
+                { type: "col", index: 1 },
+                { type: "row", index: 2 },
+                { type: "col", index: 0 },
+            ]
+        };
+
+        yield {
+            title: "Because the number of lines equals the matrix size, make the final assignment",
+            matrix: [
+                [1, 0, 1],
+                [0, 0, 4],
+                [0, 1, 0],
+            ],
+            highlight: [[0, 1], [1, 0], [2, 2]],
+        };
+        yield {
+            title: "Final assignment on original matrix",
+            matrix: [
+                [4, 1, 3],
                 [2, 0, 5],
-                [1, 0, 0],
+                [3, 2, 2],
             ],
             highlight: [[0, 1], [1, 0], [2, 2]],
         };
@@ -75,11 +122,12 @@ export const hungarianAlgorithm = {
         // startX/startY position the top-left corner of the matrix in the canvas center.
         const startX = 265;
         const startY = 130;
+        const highlight = state.highlight ?? [];
 
         state.matrix.forEach((row, rowIndex) => {
             row.forEach((value, colIndex) => {
                 // highlighted is true when the current cell appears in the state's focus list.
-                const highlighted = state.highlight.some(
+                const highlighted = highlight.some(
                     ([highlightRow, highlightCol]) =>
                         highlightRow === rowIndex && highlightCol === colIndex
                 );
@@ -94,5 +142,29 @@ export const hungarianAlgorithm = {
                 );
             });
         });
+
+        if (Array.isArray(state.lines)) {
+            ctx.strokeStyle = "#e63946";
+            ctx.lineWidth = 4;
+            ctx.setLineDash([8, 6]);
+
+            state.lines.forEach((line) => {
+                if (line.type === "row") {
+                    const y = startY + line.index * 65 + 30;
+                    ctx.beginPath();
+                    ctx.moveTo(startX - 10, y);
+                    ctx.lineTo(startX + state.matrix[0].length * 95 + 10, y);
+                    ctx.stroke();
+                } else if (line.type === "col") {
+                    const x = startX + line.index * 95 + 45;
+                    ctx.beginPath();
+                    ctx.moveTo(x, startY - 10);
+                    ctx.lineTo(x, startY + state.matrix.length * 65 + 10);
+                    ctx.stroke();
+                }
+            });
+
+            ctx.setLineDash([]);
+        }
     },
 };
