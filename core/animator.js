@@ -53,7 +53,7 @@ export class Animator {
 
         const result = this.generator.next();
         if (result.done) {
-            this.pause();
+            this.reset();
             return;
         }
 
