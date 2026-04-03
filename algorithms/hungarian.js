@@ -13,6 +13,30 @@ function drawCell(ctx, x, y, value, highlighted) {
     ctx.fillText(String(value), x + 45, y + 30);
 }
 
+// Draws a smaller reference cell for the original matrix
+function drawReferenceCell(ctx, x, y, value) {
+    ctx.fillStyle = "#f8f9fa";
+    ctx.fillRect(x, y, 60, 40);
+    ctx.strokeStyle = "#495057";
+    ctx.strokeRect(x, y, 60, 40);
+
+    ctx.fillStyle = "#111111";
+    ctx.font = "16px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(value), x + 30, y + 20);
+}
+
+export let originalMatrix = [
+    [4, 1, 3],
+    [2, 0, 5],
+    [3, 2, 2],
+];
+
+export function setOriginalMatrix(matrix) {
+    originalMatrix = matrix.map(row => row.slice());
+}
+
 export const hungarianAlgorithm = {
     name: "Hungarian",
 
@@ -113,17 +137,43 @@ export const hungarianAlgorithm = {
     },
 
     draw({ ctx, state }) {
+        // Draw original matrix on the left as reference
         ctx.fillStyle = "#111111";
-        ctx.font = "20px Arial";
+        ctx.font = "16px Arial";
         ctx.textAlign = "left";
         ctx.textBaseline = "alphabetic";
-        ctx.fillText(state.title, 40, 50);
+        ctx.fillText("Original Matrix", 40, 100);
+        const refStartX = 40;
+        const refStartY = 130;
+        originalMatrix.forEach((row, rowIndex) => {
+            row.forEach((value, colIndex) => {
+                drawReferenceCell(
+                    ctx,
+                    refStartX + colIndex * 65,
+                    refStartY + rowIndex * 45,
+                    value
+                );
+            });
+        });
 
-        // startX/startY position the top-left corner of the matrix in the canvas center.
-        const startX = 265;
+        // Centered title and matrix (dynamic for any canvas size)
+        const canvasWidth = ctx.canvas.width;
+        // Matrix width: 3 cols * 95px, height: 3 rows * 65px
+        const matrixCols = state.matrix[0]?.length || 3;
+        const matrixRows = state.matrix.length || 3;
+        const matrixWidth = matrixCols * 95;
+        const matrixHeight = matrixRows * 65;
+        const startX = Math.floor((canvasWidth - matrixWidth) / 2);
         const startY = 130;
-        const highlight = state.highlight ?? [];
 
+        // Center the step title above the matrix
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText(state.title, canvasWidth / 2, 50);
+
+        // Draw the changing matrix centered
+        const highlight = state.highlight ?? [];
         state.matrix.forEach((row, rowIndex) => {
             row.forEach((value, colIndex) => {
                 // highlighted is true when the current cell appears in the state's focus list.
@@ -131,8 +181,6 @@ export const hungarianAlgorithm = {
                     ([highlightRow, highlightCol]) =>
                         highlightRow === rowIndex && highlightCol === colIndex
                 );
-
-                // Each cell result shows the current reduced cost plus whether it is emphasized.
                 drawCell(
                     ctx,
                     startX + colIndex * 95,
