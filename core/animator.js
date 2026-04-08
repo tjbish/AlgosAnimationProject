@@ -64,4 +64,5 @@ export class Animator {
         this.pause();
         this.restart();
     }
+    
 }
