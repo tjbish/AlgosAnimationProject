@@ -94,6 +94,18 @@ button:active {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
+#randomizeBtn {
+    background-color: var(--surface);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+}
+
+#randomizeBtn:hover {
+    background-color: #f7fafc;
+    border-color: #cbd5e0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
 canvas {
     background-color: var(--surface);
     border-radius: 16px;
