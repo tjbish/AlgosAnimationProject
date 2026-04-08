@@ -42,7 +42,23 @@ document.getElementById("resetBtn").onclick = () => {
     renderer.draw(currentAlgorithm.getInitialState());
 };
 
+// --- Randomization Logic (Dinic only) ---
+const randomBtn = document.getElementById("randomBtn");
+randomBtn.onclick = () => {
+    animator.reset();
+    renderer.draw(currentAlgorithm.getRandomState());
+};
 
+function setRandomButtonVisibility() {
+    if (algorithmSelect.value === "dinic") {
+        randomBtn.style.display = "inline-block";
+    } else {
+        randomBtn.style.display = "none";
+    }
+}
+
+algorithmSelect.addEventListener("change", setRandomButtonVisibility);
+setRandomButtonVisibility();
 
 // --- Custom Matrix Modal Logic (Hungarian only) ---
 const matrixModal = document.getElementById("matrixModal");
