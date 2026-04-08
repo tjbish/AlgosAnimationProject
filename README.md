@@ -4,106 +4,137 @@ Repository for the University of Alabama CS 470 Algorithm Animations Project, Sp
 
 ## Overview
 
-This project is a browser-based visualization tool for algorithm animations. The interface provides a canvas for rendering algorithm states and a small control panel for selecting an algorithm, playing the animation, pausing it, stepping through frames, and resetting the view.
+This project is a browser-based visualization tool for stepping through three algorithms on an HTML canvas:
 
-The current implementation is intentionally modular:
+- Gale-Shapley stable matching
+- Hungarian assignment
+- Dinic maximum flow
 
-- The `Animator` controls playback timing and frame advancement;
-- The `Renderer` manages the canvas and delegates drawing to the selected algorithm;
-- Each algorithm module provides its own initial state, animation frames, and drawing logic
+The application is modular:
 
-This structure is intended to make it easier to replace or expand algorithm implementations over time without rewriting the rest of the application.
+- `Animator` controls playback timing and frame advancement
+- `Renderer` clears the canvas and delegates drawing to the selected algorithm
+- Each algorithm module owns its own initial state, animation generator, and rendering logic
+
+This structure allows new visualizations to be added without changing the playback system.
+
+## Current Features
+
+- Algorithm selection from a shared dropdown
+- Play, pause, step, and reset controls for all algorithms
+- Gale-Shapley stable matching animation with dynamic node counts
+- Hungarian algorithm animation with custom matrix input
+- Dinic algorithm animation with random network generation
+
+## Algorithm-Specific Functionality
+
+### Gale-Shapley
+
+- Visualizes proposals, tentative matches, rejections, and final stable matching
+- Supports variable problem sizes through the `Nodes` slider
+- Generates different preference scenarios for each reset
+- Draws proposers, receivers, active proposals, accepted matches, and proposer preference tables
+
+### Hungarian
+
+- Visualizes row reduction, column reduction, zero coverage, matrix adjustment, and final assignment
+- Includes a `Custom Matrix` modal for user-provided square cost matrices
+- Shows the original matrix beside the working matrix during animation
+
+### Dinic
+
+- Visualizes level graph construction and blocking-flow augmentation
+- Supports randomized flow networks with the `Randomize` button
+- Displays node levels, active augmenting paths, and per-edge flow/capacity values
 
 ## Project Structure
 
-- `index.html`  
-  Main page for the visualization app. Defines the algorithm dropdown, playback controls, and canvas element.
+- `index.html`
+  Main page for the visualization app. Defines the controls, modal, and canvas.
 
-- `style.css`  
-  Basic page styling, including the gray page background and white canvas drawing area.
+- `style.css`
+  Global page styling.
 
-- `main.js`  
-  Application entry point. Connects the DOM controls to the animator, renderer, and selected algorithm module.
+- `main.js`
+  Application entry point. Wires the DOM controls to the animator, renderer, and selected algorithm.
 
-- `core/animator.js`  
-  Playback engine responsible for stepping through generator-produced animation frames at a fixed interval.
+- `core/animator.js`
+  Playback engine that consumes generator output one state at a time.
 
-- `core/state.js`  
-  Algorithm registry. Imports available algorithm modules and maps dropdown values to the correct implementation.
+- `core/state.js`
+  Algorithm registry. Imports each algorithm module and maps dropdown values to implementations.
 
-- `ui/renderer.js`  
-  Canvas renderer. Clears the drawing area and calls the active algorithm's `draw(...)` function with the current state.
+- `ui/renderer.js`
+  Canvas renderer. Clears the canvas and invokes the active algorithm's `draw(...)` function.
 
-- `ui/controls.js`  
-  Reserved for future control-related logic.
+- `algorithms/gale_shapley.js`
+  Gale-Shapley stable matching visualization, scenario generation, and dynamic node controls.
 
-- `algorithms/gale_shapley.js`  
-  JavaScript code used to perform Gale-Shapley algorithm rendering and step generation for stable matching visualization.
+- `algorithms/hungarian.js`
+  Hungarian algorithm visualization, matrix operations, and custom matrix support.
 
-- `algorithms/hungarian.js`  
-  JavaScript code used to perform Hungarian algorithm rendering and step generation for assignment or cost-matrix visualization.
-
-- `algorithms/dinic.js`  
-  JavaScript code used to perform Dinic algorithm rendering and step generation for network flow visualization.
+- `algorithms/dinic.js`
+  Dinic maximum flow visualization, level graph generation, and randomized network support.
 
 ## How It Works
 
-When the page loads, `main.js` reads the currently selected algorithm and loads it through `core/state.js`. The selected algorithm object is expected to provide three functions:
+When the page loads, `main.js` reads the selected algorithm and loads it through `core/state.js`. Each algorithm object provides:
 
-- `getInitialState()` returns the state that should be shown before animation begins
-- `createGenerator()` returns a generator that yields one animation state at a time
-- `draw({ ctx, canvas, state })` renders the current state onto the canvas
+- `getInitialState()` to define the first frame
+- `createGenerator()` to yield animation states step by step
+- `draw({ ctx, canvas, state })` to render the current frame
 
 The workflow is:
 
-1. The user selects an algorithm
-2. `main.js` loads that algorithm and passes it to the renderer
-3. `Animator` advances through the generator one frame at a time
-4. `Renderer` clears the canvas and asks the algorithm to draw the current frame
+1. The user selects an algorithm.
+2. `main.js` retrieves that implementation from `core/state.js`.
+3. `Renderer` draws the initial state on the canvas.
+4. `Animator` advances through the algorithm generator during play or step actions.
+5. The selected algorithm redraws each new state.
 
 ## Running the Project
 
-This project is written as a client-side JavaScript application and is intended to be hosted through a web server, such as GitHub Pages.
+Because the app uses ES modules, it should be served through a local or hosted web server rather than opened directly with `file://`.
 
-For deployment:
+### Run Locally
 
-- push the repository to GitHub
-- enable GitHub Pages for the repository
-- open the published Pages URL in a browser
+From the project root, start a simple HTTP server. For example:
 
-Because the app uses JavaScript modules, opening `index.html` directly from disk with `file://` may not behave the same as serving it through GitHub Pages.
+```powershell
+python -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000/
+```
+
+### Deploy
+
+The project is also hosted with GitHub Pages within this repository and can be deployed to any static web server of your choice.
 
 ## Controls
 
-- `Play` starts automatic animation playback
+- `Play` starts automatic playback
 - `Pause` stops automatic playback
-- `Step` advances the animation by one state
-- `Reset` returns the current algorithm to its initial state
+- `Step` advances one frame
+- `Reset` rebuilds the current algorithm's initial state
+- `Custom Matrix` appears only for Hungarian
+- `Randomize` appears only for Dinic
+- `Nodes` slider appears only for Gale-Shapley
 
-## Adding or Replacing an Algorithm
+## Adding a New Algorithm
 
-To add a new algorithm module:
+To add a new visualization:
 
-1. create a new file in `algorithms/`
-2. export an algorithm object with:
-   - `name`
-   - `getInitialState()`
-   - `createGenerator()`
-   - `draw({ ctx, canvas, state })`
-3. import the new module into `core/state.js`
-4. register it in the `algorithms` object
-5. add a matching `<option>` to the dropdown in `index.html`
-
-This keeps the playback system and rendering pipeline unchanged while allowing algorithm-specific logic to evolve independently.
-
-## Notes
-
-- The current algorithm implementations are placeholders and may be revised significantly.
-- The README descriptions for individual algorithms are intentionally short so they can remain accurate while the implementations change.
+1. Create a new file in `algorithms/`.
+2. Export an algorithm object with `name`, `getInitialState()`, `createGenerator()`, and `draw({ ctx, canvas, state })`.
+3. Import and register it in `core/state.js`.
+4. Add a matching `<option>` in `index.html`.
+5. Add any algorithm-specific controls in `main.js` if needed.
 
 ## Contributors
-
-Current names listed in the page:
 
 - Tyler Bish
 - Jackson Wallace
@@ -112,5 +143,5 @@ Current names listed in the page:
 - Ryan Montgomery
 - Brayden Rouse
 - Aiden Slabiak
-
-Update the contributor list in both `README.md` and `index.html` as the project roster is finalized.
+- Nathan Hubbell
+- Lee Garber-Ford
