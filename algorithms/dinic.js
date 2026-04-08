@@ -23,21 +23,22 @@ function drawEdge(ctx, fromNode, toNode, capacity, flow, active, labelBelow = fa
     const dx = toNode.x - fromNode.x;
     const dy = toNode.y - fromNode.y;
     const angle = Math.atan2(dy, dx);
-    const radius = 24;
+    const radius = 23; // circle radius-1
 
     const startX = fromNode.x + radius * Math.cos(angle);
     const startY = fromNode.y + radius * Math.sin(angle);
     const endX = toNode.x - radius * Math.cos(angle);
     const endY = toNode.y - radius * Math.sin(angle);
 
+    // Draw the main line
     ctx.strokeStyle = active ? "#e63946" : "#6c757d";
     ctx.lineWidth = active ? 4 : 2;
-
     ctx.beginPath();
     ctx.moveTo(startX, startY);
     ctx.lineTo(endX, endY);
     ctx.stroke();
 
+    // Draw the arrowhead
     const headlen = 12;
     ctx.beginPath();
     ctx.moveTo(endX, endY);
@@ -47,64 +48,92 @@ function drawEdge(ctx, fromNode, toNode, capacity, flow, active, labelBelow = fa
     ctx.fillStyle = ctx.strokeStyle;
     ctx.fill();
 
-    const ratio = 0.4; 
-    const textX = startX + (endX - startX) * ratio;
-    const textY = startY + (endY - startY) * ratio;
+    // Calculate base text position
+    const ratio = 0.45; 
+    const textBaseX = startX + (endX - startX) * ratio;
+    const textBaseY = startY + (endY - startY) * ratio;
 
-    // Shift text down if labelBelow is true, otherwise shift it up
-    const textOffsetSide = 12; 
-    const textOffsetY = labelBelow ? textY + textOffsetSide : textY - textOffsetSide;
+    const normalAngle = labelBelow ? angle + Math.PI / 2 : angle - Math.PI / 2;
+    const textOffsetDist = 16; 
+    const finalTextX = textBaseX + Math.cos(normalAngle) * textOffsetDist;
+    const finalTextY = textBaseY + Math.sin(normalAngle) * textOffsetDist;
 
     const textContent = `${flow}/${capacity}`;
 
+    // Text styling
     ctx.font = active ? "bold 14px Arial" : "14px Arial";
     ctx.textAlign = "center";
-    
-    ctx.textBaseline = labelBelow ? "top" : "bottom";
-
+    ctx.textBaseline = "middle";
+    // Draw text outline
     ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
     ctx.lineWidth = 6; 
-    ctx.strokeText(textContent, textX, textOffsetY); 
-
+    ctx.strokeText(textContent, finalTextX, finalTextY); 
+    // Draw actual text
     ctx.fillStyle = active ? "#e63946" : "#111111";
-    ctx.fillText(textContent, textX, textOffsetY);
+    ctx.fillText(textContent, finalTextX, finalTextY);
 }
 
-// Generate graphs with random capacities for each edge, and include the labelBelow flag for specific edges.
+// Generate a fixed graph with predetermined capacities to show multiple cycles and augmenting paths.
+function generateFixedNetwork() {
+    const nodes = {
+        s: { x: 250, y: 250, color: "#bde0fe" }, // Source
+        a: { x: 500, y: 100, color: "#d8f3dc" }, // Top row, Col 1
+        b: { x: 500, y: 250, color: "#d8f3dc" }, // Middle row, Col 1
+        c: { x: 500, y: 400, color: "#d8f3dc" }, // Bottom row, Col 1
+        d: { x: 800, y: 100, color: "#d8f3dc" }, // Top row, Col 2
+        e: { x: 800, y: 250, color: "#d8f3dc" }, // Middle row, Col 2
+        f: { x: 800, y: 400, color: "#d8f3dc" }, // Bottom row, Col 2
+        t: { x: 1050, y: 250, color: "#ffd6a5" }, // Sink
+    };
+
+    const edges = [
+        { from: "s", to: "a", cap: 10 },        
+        { from: "s", to: "b", cap: 2 },          
+        { from: "s", to: "c", cap: 12, labelBelow: true }, 
+
+        { from: "a", to: "d", cap: 10 },        
+        { from: "b", to: "d", cap: 5 },          
+        { from: "b", to: "e", cap: 10 },        
+        { from: "c", to: "f", cap: 12, labelBelow: true }, 
+
+        { from: "d", to: "t", cap: 10 },         
+        { from: "e", to: "t", cap: 10 },         
+        { from: "f", to: "b", cap: 10, labelBelow: true }, 
+        { from: "f", to: "t", cap: 2, labelBelow: true },  
+    ];
+
+    return { nodes, edges };
+}
+
+// Generate graphs with random capacities for each edge
 function generateRandomNetwork() {
     const nodes = {
-        s: { x: 100, y: 250, color: "#bde0fe" }, // Source (Middle)
-        a: { x: 300, y: 100, color: "#d8f3dc" }, // Top row, Col 1
-        b: { x: 300, y: 250, color: "#d8f3dc" }, // Middle row, Col 1
-        c: { x: 300, y: 400, color: "#d8f3dc" }, // Bottom row, Col 1
-        d: { x: 500, y: 100, color: "#d8f3dc" }, // Top row, Col 2
-        e: { x: 500, y: 250, color: "#d8f3dc" }, // Middle row, Col 2
-        f: { x: 500, y: 400, color: "#d8f3dc" }, // Bottom row, Col 2
-        t: { x: 700, y: 250, color: "#ffd6a5" }, // Sink (Middle)
+        s: { x: 250, y: 250, color: "#bde0fe" }, // Source
+        a: { x: 500, y: 100, color: "#d8f3dc" }, // Top row, Col 1
+        b: { x: 500, y: 250, color: "#d8f3dc" }, // Middle row, Col 1
+        c: { x: 500, y: 400, color: "#d8f3dc" }, // Bottom row, Col 1
+        d: { x: 800, y: 100, color: "#d8f3dc" }, // Top row, Col 2
+        e: { x: 800, y: 250, color: "#d8f3dc" }, // Middle row, Col 2
+        f: { x: 800, y: 400, color: "#d8f3dc" }, // Bottom row, Col 2
+        t: { x: 1050, y: 250, color: "#ffd6a5" }, // Sink
     };
+
 
     const randCap = () => Math.floor(Math.random() * 8) + 2;
 
     const edges = [
-        // From Source to first column
         { from: "s", to: "a", cap: randCap() },
         { from: "s", to: "b", cap: randCap() },
         { from: "s", to: "c", cap: randCap(), labelBelow: true },
 
-        // Cross-connections between Column 1 and Column 2
         { from: "a", to: "d", cap: randCap() },
-        // { from: "a", to: "e", cap: randCap() },
-        
         { from: "b", to: "d", cap: randCap() },
         { from: "b", to: "e", cap: randCap() },
-        // \{ from: "b", to: "f", cap: randCap(), labelBelow: true },
-
-        { from: "c", to: "e", cap: randCap() },
         { from: "c", to: "f", cap: randCap(), labelBelow: true },
 
-        // From second column to Sink
         { from: "d", to: "t", cap: randCap() },
         { from: "e", to: "t", cap: randCap() },
+        { from: "f", to: "b", cap: randCap(), labelBelow: true },
         { from: "f", to: "t", cap: randCap(), labelBelow: true },
     ];
 
@@ -116,10 +145,16 @@ let currentNetwork = null;
 // export the dinic's algorithm so it can be imported and used elsewhere
 export const dinicAlgorithm = {
     name: "Dinic",
+    currentNetwork: generateFixedNetwork(),
+
+    getRandomState() {
+        currentNetwork = generateRandomNetwork();
+        return this.getInitialState();
+    },
 
     getInitialState() {
-        currentNetwork = generateRandomNetwork();
-        
+        currentNetwork = currentNetwork || generateFixedNetwork();
+
         const flows = {};
         const levels = {};
         
