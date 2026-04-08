@@ -110,7 +110,7 @@ Current names listed in the page:
 - Kian McKenna
 - Peter Capriotti
 - Ryan Montgomery
-- Brayden #####
+- Brayden Rouse
 - Aiden Slabiak
 
 Update the contributor list in both `README.md` and `index.html` as the project roster is finalized.

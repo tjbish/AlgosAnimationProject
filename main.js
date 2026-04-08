@@ -85,10 +85,10 @@ submitMatrixBtn.onclick = () => {
         return;
     }
     matrixModal.style.display = "none";
-    // Update the static matrix for Hungarian and redraw
+    // Update Hungarian data and reset the animator to the new initial state.
     setOriginalMatrix(matrix);
     if (algorithmSelect.value === "hungarian") {
-        renderer.draw(getAlgorithm("hungarian").getInitialState());
+        loadAlgorithm("hungarian");
     }
 };
 

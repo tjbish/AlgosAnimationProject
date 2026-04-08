@@ -47,10 +47,10 @@ function generateRandomMatrix(size)
 
 function rowReduction(matrix)
 {
-    n = matrix.length;
+    const n = matrix.length;
     for (let i = 0; i < n; ++i)
     {
-        rowMin = Math.min(...matrix[i]);
+        const rowMin = Math.min(...matrix[i]);
         for (let o = 0; o < n; ++o)
         {
             matrix[i][o] -= rowMin;
@@ -61,7 +61,7 @@ function rowReduction(matrix)
 
 function columnReduction(matrix)
 {
-    n = matrix.length;
+    const n = matrix.length;
     let col = [];
     for (let i = 0; i < n; ++i)
     {
@@ -70,7 +70,7 @@ function columnReduction(matrix)
         {
             col.push(matrix[o][i]);
         }
-        colMin = Math.min(...col);
+        const colMin = Math.min(...col);
         for (let o = 0; o < n; ++o)
         {
             matrix[o][i] -= colMin;
@@ -243,15 +243,15 @@ function adjustMatrix(matrix, lines) {
 
 function findZeros(matrix)
 {
-    zeros = [];
-    n = matrix.length
+    const zeros = [];
+    const n = matrix.length;
     for (let i = 0; i < n; ++i)
     {
         for (let o = 0; o < n; ++o)
         {
-            if (matrix[i][o] == 0)
+            if (matrix[i][o] === 0)
             {
-                zeros.push([i,o]);
+                zeros.push([i, o]);
             }
         }
     }
