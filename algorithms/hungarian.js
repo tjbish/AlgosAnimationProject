@@ -27,11 +27,238 @@ function drawReferenceCell(ctx, x, y, value) {
     ctx.fillText(String(value), x + 30, y + 20);
 }
 
-export let originalMatrix = [
-    [4, 1, 3],
-    [2, 0, 5],
-    [3, 2, 2],
-];
+function generateRandomMatrix(size)
+{
+    let matrix = [];
+    let i = 0;
+    let o = 0;
+    for (i = 0; i < size; ++i)
+    {
+        matrix[i] = [];
+        for (o = 0; o < size; ++o)
+        {
+            matrix[i][o] = Math.round((Math.random() * 10))
+        }
+    }
+    return matrix;
+}
+
+//Hungarian algorithm functions
+
+function rowReduction(matrix)
+{
+    n = matrix.length;
+    for (let i = 0; i < n; ++i)
+    {
+        rowMin = Math.min(...matrix[i]);
+        for (let o = 0; o < n; ++o)
+        {
+            matrix[i][o] -= rowMin;
+        }
+    }
+    return matrix;
+}
+
+function columnReduction(matrix)
+{
+    n = matrix.length;
+    let col = [];
+    for (let i = 0; i < n; ++i)
+    {
+        col = [];
+        for (let o = 0; o < n; ++o)
+        {
+            col.push(matrix[o][i]);
+        }
+        colMin = Math.min(...col);
+        for (let o = 0; o < n; ++o)
+        {
+            matrix[o][i] -= colMin;
+        }
+    }
+    return matrix;
+}
+
+function lineCover(matrix)
+{
+    const n = matrix.length;
+
+    const adj = Array.from({ length: n }, () => []);
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            if (matrix[i][j] === 0) {
+                adj[i].push(j);
+            }
+        }
+    }
+
+    const matchToCol = Array(n).fill(-1);
+
+    function dfs(row, visited) {
+        for (const col of adj[row]) {
+            if (visited[col]) continue;
+            visited[col] = true;
+
+            if (matchToCol[col] === -1 || dfs(matchToCol[col], visited)) {
+                matchToCol[col] = row;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    for (let i = 0; i < n; i++) {
+        dfs(i, Array(n).fill(false));
+    }
+
+    const visitedRows = Array(n).fill(false);
+    const visitedCols = Array(n).fill(false);
+
+    function mark(row) {
+        visitedRows[row] = true;
+        for (const col of adj[row]) {
+            if (!visitedCols[col] && matchToCol[col] !== row) {
+                visitedCols[col] = true;
+                if (matchToCol[col] !== -1) {
+                    mark(matchToCol[col]);
+                }
+            }
+        }
+    }
+
+    for (let i = 0; i < n; i++) {
+        let matched = false;
+        for (let j = 0; j < n; j++) {
+            if (matchToCol[j] === i) {
+                matched = true;
+                break;
+            }
+        }
+        if (!matched) {
+            mark(i);
+        }
+    }
+
+    const lines = []
+
+    for (let i = 0; i < n; i++) {
+        if (!visitedRows[i]) lines.push({type: "row", index: i});
+    }
+
+    for (let j = 0; j < n; j++) {
+        if (visitedCols[j]) lines.push({type: "col", index: j});
+    }
+
+    return lines;
+}
+
+function findAssignment(matrix) {
+    const n = matrix.length;
+
+    const adj = Array.from({ length: n }, () => []);
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            if (matrix[i][j] === 0) {
+                adj[i].push(j);
+            }
+        }
+    }
+
+    const matchCol = Array(n).fill(-1);
+
+    function dfs(row, visited) {
+        for (const col of adj[row]) {
+            if (visited[col]) continue;
+            visited[col] = true;
+
+            if (matchCol[col] === -1 || dfs(matchCol[col], visited)) {
+                matchCol[col] = row;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    for (let i = 0; i < n; i++) {
+        if (!dfs(i, Array(n).fill(false))) {
+            throw new Error("No perfect assignment found");
+        }
+    }
+
+    const result = [];
+    for (let col = 0; col < n; col++) {
+        const row = matchCol[col];
+        if (row !== -1) {
+            result.push([row, col]);
+        }
+    }
+
+    return result;
+}
+
+function adjustMatrix(matrix, lines) {
+    const n = matrix.length;
+
+    const coveredRows = new Set();
+    const coveredCols = new Set();
+
+    for (const line of lines) {
+        if (line.type === "row") {
+            coveredRows.add(line.index);
+        } else if (line.type === "col") {
+            coveredCols.add(line.index);
+        }
+    }
+
+    let minUncovered = Infinity;
+
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            const isCovered = coveredRows.has(i) || coveredCols.has(j);
+            if (!isCovered) {
+                minUncovered = Math.min(minUncovered, matrix[i][j]);
+            }
+        }
+    }
+
+    if (minUncovered === Infinity) return matrix; 
+
+    const newMatrix = matrix.map(row => row.slice()); 
+
+    for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+            const rowCovered = coveredRows.has(i);
+            const colCovered = coveredCols.has(j);
+
+            if (!rowCovered && !colCovered) {
+                newMatrix[i][j] -= minUncovered;
+            } else if (rowCovered && colCovered) {
+                newMatrix[i][j] += minUncovered;
+            }
+        }
+    }
+
+    return newMatrix;
+}
+
+function findZeros(matrix)
+{
+    zeros = [];
+    n = matrix.length
+    for (let i = 0; i < n; ++i)
+    {
+        for (let o = 0; o < n; ++o)
+        {
+            if (matrix[i][o] == 0)
+            {
+                zeros.push([i,o]);
+            }
+        }
+    }
+    return zeros;
+}
+
+export let originalMatrix = generateRandomMatrix(3);
 
 export function setOriginalMatrix(matrix) {
     originalMatrix = matrix.map(row => row.slice());
@@ -45,11 +272,7 @@ export const hungarianAlgorithm = {
         // highlight stores [row, col] coordinates that should be emphasized in the drawing.
         return {
             title: "Initial cost matrix",
-            matrix: [
-                [4, 1, 3],
-                [2, 0, 5],
-                [3, 2, 2],
-            ],
+            matrix: originalMatrix,
             highlight: [],
         };
     },
@@ -58,81 +281,69 @@ export const hungarianAlgorithm = {
         // Step 1 result: show the original matrix with no special entries selected.
         yield {
             title: "Initial cost matrix",
-            matrix: [
-                [4, 1, 3],
-                [2, 0, 5],
-                [3, 2, 2],
-            ],
+            matrix: originalMatrix,
             highlight: [],
         };
 
+        let solved = false;
+        let currentMatrix = structuredClone(originalMatrix);
+        let zeros = [];
+        let lines = [];
+
         // Step 2 result: row reduction introduces zeros that are highlighted in green.
+        currentMatrix = rowReduction(currentMatrix);
+        zeros = findZeros(currentMatrix);
         yield {
             title: "Row reduction",
-            matrix: [
-                [3, 0, 2],
-                [2, 0, 5],
-                [1, 0, 0],
-            ],
-            highlight: [[0, 1], [1, 1], [2, 1], [2, 2]],
+            matrix: currentMatrix,
+            highlight: zeros,
         };
-
         // Step 3 result: column reduction introduces zeros that are highlighted in green.
+        currentMatrix = columnReduction(currentMatrix);
+        zeros = findZeros(currentMatrix);
         yield {
-            title: "Column Reduction",
-            matrix: [
-                [2, 0, 2],
-                [1, 0, 5],
-                [0, 0, 0],
-            ],
-            highlight: [[0, 1], [1, 1], [2, 0], [2, 1], [2, 2]],
+        title: "Column Reduction",
+        matrix: currentMatrix,
+        highlight: zeros,
         };
 
-        // Step 4: Find the smallest entry not covered by any line. 
-        // Subtract it from all uncovered entries and add it to all entries covered by two lines. This creates new zeros that are highlighted in green.
-        yield {
-            title: "Adjust matrix to create additional zeros, based on minimum uncovered value",
-            matrix: [
-                [1, 0, 1],
-                [0, 0, 4],
-                [0, 1, 0],
-            ],
-            highlight: [[0, 1], [1, 0], [1, 1], [2, 0], [2, 2]],
-            
-        };
-
-        yield {
+        while(!solved)
+        {
+            // Step 4 result: lines
+            lines = lineCover(currentMatrix);
+            yield {
             title: "Display lines covering all zeros",
-            matrix: [
-                [1, 0, 1],
-                [0, 0, 4],
-                [0, 1, 0],
-            ],
-            highlight: [[0, 1], [1, 0], [1, 1], [2, 0], [2, 2]],
-            lines: [
-                { type: "col", index: 1 },
-                { type: "row", index: 2 },
-                { type: "col", index: 0 },
-            ]
-        };
-
+            matrix: currentMatrix,
+            highlight: zeros,
+            lines: lines
+            };
+            if (lines.length == currentMatrix.length)
+            {
+                solved = true;
+            }
+            else
+            {
+                // Step 5 result: adjust
+                currentMatrix = adjustMatrix(currentMatrix, lines);
+                zeros = findZeros(currentMatrix);
+                yield {
+                    title: "Because the number of lines did not equal the matrix size, adjust the matrix",
+                    matrix: currentMatrix,
+                    highlight: zeros,
+                }
+            }
+        }
+        // Step 6 result: final assignment
+        let final = findAssignment(currentMatrix);
         yield {
             title: "Because the number of lines equals the matrix size, make the final assignment",
-            matrix: [
-                [1, 0, 1],
-                [0, 0, 4],
-                [0, 1, 0],
-            ],
-            highlight: [[0, 1], [1, 0], [2, 2]],
+            matrix: currentMatrix,
+            highlight: final,
         };
         yield {
             title: "Final assignment on original matrix",
-            matrix: [
-                [4, 1, 3],
-                [2, 0, 5],
-                [3, 2, 2],
-            ],
-            highlight: [[0, 1], [1, 0], [2, 2]],
+            matrix: originalMatrix,
+            highlight: final,
         };
     },
 
