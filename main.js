@@ -40,4 +40,9 @@ document.getElementById("resetBtn").onclick = () => {
     renderer.draw(currentAlgorithm.getInitialState());
 };
 
+document.getElementById("randomizeBtn").onclick = () => {
+    animator.reset();
+    renderer.draw(currentAlgorithm.getRandomState());
+};
+
 loadAlgorithm(algorithmSelect.value);
