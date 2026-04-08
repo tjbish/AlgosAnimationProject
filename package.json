@@ -1,0 +1,9 @@
+{
+  "name": "algos-animation-project",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npx esbuild main.js --bundle --outfile=dist/bundle.js --format=iife --minify",
+    "start": "npx serve . -s"
+  }
+}
