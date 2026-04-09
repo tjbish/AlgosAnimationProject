@@ -3,7 +3,7 @@ export class Animator {
         this.interval = null;
         this.generatorFactory = null;
         this.generator = null;
-        this.speed = 1500;
+        this.speed = 1750;
         this.onFrame = onFrame;
     }
 
