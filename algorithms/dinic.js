@@ -166,6 +166,9 @@ export const dinicAlgorithm = {
             activeEdges: [],
             flows,
             levels,
+            phaseFlowAdded: 0,
+            totalFlow: 0,
+            flowMessage: "No flow pushed yet.",
             nodes: currentNetwork.nodes,
             edges: currentNetwork.edges
         };
@@ -218,13 +221,27 @@ export const dinicAlgorithm = {
 
             yield {
                 title: "Phase 1: BFS builds the Level Graph",
-                activeEdges: [], flows: { ...flows }, levels: { ...levels }, nodes, edges
+                activeEdges: [],
+                flows: { ...flows },
+                levels: { ...levels },
+                phaseFlowAdded: 0,
+                totalFlow: maxFlow,
+                flowMessage: "BFS built the level graph. No new flow added in this step.",
+                nodes,
+                edges
             };
 
             if (levels['t'] === null) {
                 yield {
                     title: `Complete. Sink Unreachable. Max Flow = ${maxFlow}`,
-                    activeEdges: [], flows: { ...flows }, levels: { ...levels }, nodes, edges
+                    activeEdges: [],
+                    flows: { ...flows },
+                    levels: { ...levels },
+                    phaseFlowAdded: 0,
+                    totalFlow: maxFlow,
+                    flowMessage: "No residual path reaches the sink, so the current total flow is maximum.",
+                    nodes,
+                    edges
                 };
                 break;
             }
@@ -268,13 +285,20 @@ export const dinicAlgorithm = {
 
                 yield {
                     title: `Phase 2 DFS: Pushed ${pushed} units of flow`,
-                    activeEdges, flows: { ...flows }, levels: { ...levels }, nodes, edges
+                    activeEdges,
+                    flows: { ...flows },
+                    levels: { ...levels },
+                    phaseFlowAdded: pushed,
+                    totalFlow: maxFlow,
+                    flowMessage: `This augmenting path added ${pushed} units. Total flow is now ${maxFlow}.`,
+                    nodes,
+                    edges
                 };
             }
         }
     },
 
-    draw({ ctx, state }) {
+    draw({ ctx, canvas, state }) {
         ctx.fillStyle = "#111111";
         ctx.font = "20px Arial";
         ctx.textAlign = "left";
@@ -298,5 +322,17 @@ export const dinicAlgorithm = {
                 drawNode(ctx, key, node.x, node.y, node.color, level);
             });
         }
+
+        const totalFlow = state.totalFlow ?? 0;
+        const phaseFlowAdded = state.phaseFlowAdded ?? 0;
+        const flowMessage = state.flowMessage || "No flow update available.";
+        const infoY = canvas.height - 45;
+
+        ctx.fillStyle = "#111111";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(`Total Flow: ${totalFlow}`, 40, infoY);
+        ctx.fillText(`Path Added: ${phaseFlowAdded}`, 220, infoY);
+        ctx.fillText(flowMessage, 40, infoY + 24);
     },
 };
