@@ -1,60 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 
 <html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Algorithm Animations</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Algorithm Animations</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+	<body>
+		<h1>CS 470 - Algorithm Animations Project</h1>
 
-<body>
+		<!-- Controls -->
 
-    <h1>CS 470 - Algorithm Animations Project</h1>
+		<div id="controls">
+			<select id="algorithmSelect">
+				<option value="gale">Gale-Shapley</option>
+				<option value="hungarian">Hungarian</option>
+				<option value="dinic">Dinic</option>
+			</select>
 
+			<button cls="btn" id="playBtn">▶ Play</button>
+			<button cls="btn inactive" id="pauseBtn">⏸ Pause</button>
+			<button cls="btn" id="stepBtn">→ Step</button>
+			<button cls="btn" id="resetBtn">↩︎ Reset</button>
+		</div>
 
-    <!-- Controls -->
-    <div id="controls">
-        <select id="algorithmSelect">
-            <option value="gale">Gale-Shapley</option>
-            <option value="hungarian">Hungarian</option>
-            <option value="dinic">Dinic</option>
-        </select>
+		<!-- Canvas -->
 
-        <button id="playBtn">Play</button>
-        <button id="pauseBtn">Pause</button>
-        <button id="stepBtn">Step</button>
-        <button id="resetBtn">Reset</button>
-        <button id="customMatrixBtn" style="display:none;">Custom Matrix</button>
-        <button id="randomBtn" style="display:none;">Randomize</button>
-    </div>
+		<canvas id="canvas" width="1300" height="500"></canvas>
 
-    <!-- Modal for custom matrix input (always present, but only shown for Hungarian) -->
-    <div id="matrixModal"
-        style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center;">
-        <div
-            style="background:#fff; padding:24px; border-radius:8px; min-width:320px; max-width:90vw; margin:60px auto; position:relative;">
-            <h2>Enter Cost Matrix</h2>
-            <p>Enter a square matrix (comma or space separated, one row per line):</p>
-            <textarea id="matrixInput" rows="6" style="width:100%; font-family:monospace;"></textarea>
-            <div style="margin-top:12px; text-align:right;">
-                <button id="cancelMatrixBtn" type="button">Cancel</button>
-                <button id="submitMatrixBtn" type="button">Submit</button>
-            </div>
-            <div id="matrixError" style="color:red; margin-top:8px; min-height:20px;"></div>
-        </div>
-    </div>
+		<script type="module" src="main.js"></script>
 
-    <!-- Canvas -->
-
-    <canvas id="canvas" width="1300" height="500"></canvas>
-
-    <script type="module" src="./main.js"></script>
-
-    <p>Project by: Tyler Bish, Jackson Wallace, Kian McKenna, Peter Capriotti,
-        Ryan Montgomery, Brayden Rouse, Aiden Slabiak, Nathan Hubbell, Lee Garber-Ford
-    </p>
-
-</body>
-
+		<!--TODO: Ensure contributer name list is correct-->
+		<p>
+			Project by: Tyler Bish, Jackson Wallace, Kian McKenna, Peter Capriotti,
+			Ryan Montgomery, Brayden Rouse, Aiden Slabiak, Nathan Hubbell, Lee
+			Garber-Ford
+		</p>
+	</body>
 </html>
