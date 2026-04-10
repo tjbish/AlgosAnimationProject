@@ -1,3 +1,30 @@
+@font-face {
+	font-family: "glacial_indifference";
+	src:
+		url("fonts/glacialindifference-bold-webfont.woff2") format("woff2"),
+		url("fonts/glacialindifference-bold-webfont.woff") format("woff");
+	font-weight: bold;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: "glacial_indifference";
+	src:
+		url("fonts/glacialindifference-italic-webfont.woff2") format("woff2"),
+		url("fonts/glacialindifference-italic-webfont.woff") format("woff");
+	font-weight: normal;
+	font-style: italic;
+}
+
+@font-face {
+	font-family: "glacial_indifference";
+	src:
+		url("fonts/glacialindifference-regular-webfont.woff2") format("woff2"),
+		url("fonts/glacialindifference-regular-webfont.woff") format("woff");
+	font-weight: normal;
+	font-style: normal;
+}
+
 html {
 	background: #ffffff;
 	background: radial-gradient(
@@ -5,12 +32,7 @@ html {
 		rgba(255, 255, 255, 1) 20%,
 		rgba(148, 187, 233, 1) 100%
 	);
-	font-family: "glacial_indifferenceregular", Arial, sans-serif;
-	src:
-		url("fonts/glacialindifference-regular-webfont.woff2") format("woff2"),
-		url("fonts/glacialindifference-regular-webfont.woff") format("woff");
-	font-weight: normal;
-	font-style: normal;
+	font-family: "glacial_indifference", Arial, sans-serif;
 }
 
 body {
