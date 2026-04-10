@@ -6,39 +6,61 @@ import { setOriginalMatrix } from "./algorithms/hungarian.js";
 const canvas = document.getElementById("canvas");
 const algorithmSelect = document.getElementById("algorithmSelect");
 const renderer = new Renderer(canvas);
+const playBtn = document.getElementById("playBtn");
+const pauseBtn = document.getElementById("pauseBtn");
 
 let currentAlgorithm = null;
 
-const animator = new Animator((state) => {
-    renderer.draw(state);
-});
+function setPlaybackUI(isPlaying) {
+    renderer.setPlaybackState(isPlaying);
+    playBtn.classList.toggle("active-playback", isPlaying);
+    pauseBtn.classList.toggle("active-playback", !isPlaying);
+    renderer.redraw();
+}
+
+const animator = new Animator(
+    (state) => {
+        renderer.draw(state);
+    },
+    (isPlaying) => {
+        setPlaybackUI(isPlaying);
+    }
+);
 
 function loadAlgorithm(algorithmKey) {
+    animator.pause();
+    setPlaybackUI(false);
+
     currentAlgorithm = getAlgorithm(algorithmKey);
     renderer.setAlgorithm(currentAlgorithm);
     animator.setGeneratorFactory(() => currentAlgorithm.createGenerator());
-    renderer.draw(currentAlgorithm.getInitialState());
+
+    const initialState = currentAlgorithm.getInitialState();
+    renderer.draw(initialState);
 }
 
 algorithmSelect.onchange = (event) => {
     loadAlgorithm(event.target.value);
 };
 
-document.getElementById("playBtn").onclick = () => {
+playBtn.onclick = () => {
     animator.play();
 };
 
-document.getElementById("pauseBtn").onclick = () => {
+pauseBtn.onclick = () => {
     animator.pause();
+    setPlaybackUI(false);
 };
 
 document.getElementById("stepBtn").onclick = () => {
+    animator.pause();
+    setPlaybackUI(false);
     animator.step();
 };
 
 document.getElementById("resetBtn").onclick = () => {
     animator.reset();
-
+    setPlaybackUI(false);
     renderer.draw(currentAlgorithm.getInitialState());
 };
 
@@ -46,6 +68,7 @@ document.getElementById("resetBtn").onclick = () => {
 const randomBtn = document.getElementById("randomBtn");
 randomBtn.onclick = () => {
     animator.reset();
+    setPlaybackUI(false);
     renderer.draw(currentAlgorithm.getRandomState());
 };
 

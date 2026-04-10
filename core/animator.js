@@ -1,10 +1,11 @@
 export class Animator {
-    constructor(onFrame) {
+    constructor(onFrame, onPlaybackChange = () => {}) {
         this.interval = null;
         this.generatorFactory = null;
         this.generator = null;
         this.speed = 1750;
         this.onFrame = onFrame;
+        this.onPlaybackChange = onPlaybackChange;
     }
 
     setGeneratorFactory(generatorFactory) {
@@ -35,11 +36,16 @@ export class Animator {
         this.interval = setInterval(() => {
             this.step();
         }, this.speed);
+        this.onPlaybackChange(true);
     }
 
     pause() {
+        const wasPlaying = this.interval !== null;
         clearInterval(this.interval);
         this.interval = null;
+        if (wasPlaying) {
+            this.onPlaybackChange(false);
+        }
     }
 
     step() {
