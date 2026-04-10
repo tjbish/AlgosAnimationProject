@@ -58,7 +58,7 @@ button {
 	border: none;
 	background: none;
 	appearance: none; /* Removes platform-specific styling */
-	background-color: rgba(148, 187, 233, 1);
+	background-color: #9cbbe9;
 	border: 2px solid #e1e4f0;
 	color: black;
 	padding: 15px 32px;
@@ -72,6 +72,18 @@ button {
 	height: 60px;
 	font-size: 20;
 	text-align: center;
+	transition: 0.3s;
+	box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0);
+}
+
+button:hover {
+	background-color: #93b0db;
+	box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.5);
+}
+
+.inactive {
+	background-color: #808080;
+	pointer-events: none;
 }
 
 canvas {

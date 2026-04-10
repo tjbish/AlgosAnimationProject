@@ -1,67 +1,71 @@
 export class Animator {
-    constructor(onFrame) {
-        this.interval = null;
-        this.generatorFactory = null;
-        this.generator = null;
-        this.speed = 1750;
-        this.onFrame = onFrame;
-    }
+	constructor(onFrame) {
+		this.interval = null;
+		this.generatorFactory = null;
+		this.generator = null;
+		this.speed = 1750;
+		this.onFrame = onFrame;
+	}
 
-    setGeneratorFactory(generatorFactory) {
-        this.pause();
-        this.generatorFactory = generatorFactory;
-        this.generator = null;
-    }
+	setGeneratorFactory(generatorFactory) {
+		this.pause();
+		this.generatorFactory = generatorFactory;
+		this.generator = null;
+	}
 
-    restart() {
-        if (!this.generatorFactory) {
-            this.generator = null;
-            return;
-        }
+	restart() {
+		if (!this.generatorFactory) {
+			this.generator = null;
+			return;
+		}
 
-        this.generator = this.generatorFactory();
-    }
+		this.generator = this.generatorFactory();
+	}
 
-    play() {
-        if (!this.generatorFactory) {
-            return;
-        }
+	play() {
+		//Document.getElementById("playBtn").classList.add("inactive");
 
-        if (!this.generator) {
-            this.restart();
-        }
+		if (!this.generatorFactory) {
+			return;
+		}
 
-        this.pause();
-        this.interval = setInterval(() => {
-            this.step();
-        }, this.speed);
-    }
+		if (!this.generator) {
+			this.restart();
+		}
 
-    pause() {
-        clearInterval(this.interval);
-        this.interval = null;
-    }
+		this.pause();
+		this.interval = setInterval(() => {
+			this.step();
+		}, this.speed);
+	}
 
-    step() {
-        if (!this.generatorFactory) {
-            return;
-        }
+	pause() {
+		//Document.getElementById("playBtn").classList.remove("inactive");
 
-        if (!this.generator) {
-            this.restart();
-        }
+		clearInterval(this.interval);
+		this.interval = null;
+	}
 
-        const result = this.generator.next();
-        if (result.done) {
-            this.pause();
-            return;
-        }
+	step() {
+		if (!this.generatorFactory) {
+			return;
+		}
 
-        this.onFrame(result.value);
-    }
+		if (!this.generator) {
+			this.restart();
+		}
 
-    reset() {
-        this.pause();
-        this.restart();
-    }
+		const result = this.generator.next();
+		if (result.done) {
+			this.pause();
+			return;
+		}
+
+		this.onFrame(result.value);
+	}
+
+	reset() {
+		this.pause();
+		this.restart();
+	}
 }
